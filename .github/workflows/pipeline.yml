@@ -6,6 +6,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   train-and-evaluate:
     runs-on: ubuntu-latest
@@ -22,7 +25,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pandas numpy scikit-learn joblib
+          pip install pandas numpy scikit-learn joblib huggingface_hub
 
       - name: Run ML pipeline
         run: python train.py
@@ -34,3 +37,53 @@ jobs:
           path: |
             artifacts/superkart_random_forest_pipeline.joblib
             artifacts/metrics.json
+
+      - name: Register model and metrics on Hugging Face
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          python - <<'PY'
+          import os
+          from huggingface_hub import HfApi, create_repo
+
+          token = os.environ.get("HF_TOKEN")
+          if not token:
+              raise RuntimeError(
+                  "HF_TOKEN GitHub Actions secret is missing."
+              )
+
+          repo_id = "Sunitha-AIML2026/superkart-sales-random-forest"
+
+          create_repo(
+              repo_id=repo_id,
+              repo_type="model",
+              private=False,
+              exist_ok=True,
+              token=token,
+          )
+
+          api = HfApi(token=token)
+
+          api.upload_file(
+              path_or_fileobj=(
+                  "artifacts/superkart_random_forest_pipeline.joblib"
+              ),
+              path_in_repo="superkart_random_forest_pipeline.joblib",
+              repo_id=repo_id,
+              repo_type="model",
+              commit_message="Register trained SuperKart Random Forest pipeline",
+          )
+
+          api.upload_file(
+              path_or_fileobj="artifacts/metrics.json",
+              path_in_repo="metrics.json",
+              repo_id=repo_id,
+              repo_type="model",
+              commit_message="Update SuperKart evaluation metrics",
+          )
+
+          print(
+              f"Model and metrics registered: "
+              f"https://huggingface.co/{repo_id}"
+          )
+          PY
