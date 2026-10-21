@@ -26,6 +26,7 @@ DATASET_URL = (
     "Sunitha-AIML2026/superkart-sales/resolve/main/SuperKart.csv"
 )
 TARGET_COLUMN = "Product_Store_Sales_Total"
+DATASET_REPO_ID = "Sunitha-AIML2026/superkart-sales"
 RANDOM_STATE = 42
 
 ARTIFACT_DIR = Path("artifacts")
