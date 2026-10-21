@@ -24,12 +24,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install pandas numpy scikit-learn joblib
 
-      - name: Download dataset from Hugging Face
-        run: |
-          mkdir -p data
-          python -c "from huggingface_hub import hf_hub_download; hf_hub_download(repo_id='Sunitha-AIML2026/superkart-sales', filename='SuperKart.csv', repo_type='dataset', local_dir='data')"
-          find data -maxdepth 2 -type f -print
-
       - name: Run ML pipeline
         run: python train.py
 
